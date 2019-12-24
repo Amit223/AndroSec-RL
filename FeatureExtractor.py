@@ -1,6 +1,4 @@
-#mport androguard.androguard.session
-
-
+from androguard import misc
 #this class extract features from android file
 class FeatureExtractor:
 
@@ -13,5 +11,5 @@ class FeatureExtractor:
         #files=self.file.show()
         print(self.file.get_permissions())
 
-fe=FeatureExtractor("/Files/app1.apk")
+fe=FeatureExtractor("Files/app1.apk")
 fe.extractFeatures()
