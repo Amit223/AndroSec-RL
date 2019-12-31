@@ -1,35 +1,43 @@
 import simplejson
 import urllib
 import androguard.core.bytecodes.apk
-from androguard.core import analysis
+from androguard.core.analysis import auto
 from androguard.core.bytecodes import dvm
 from androguard . core . bytecodes . dvm import *
 from androguard . core . bytecodes . apk import *
 from androguard.misc import AnalyzeAPK
 
 
-def getIntents(url):
-    a = APK (url)
+def get_features(file):
+    a = APK (file)
     d = dvm . DalvikVMFormat ( a. get_dex () )
     z = d . get_strings ()
+    #intents
     intentList=[]
     for i in range ( len( z )):
         if z [i ]. startswith ( "android.intent.action."):
             intents = z[i ]
             intentList . append ( intents )
-    return intentList
-def getPermissions(file):
-    a, d, dx = AnalyzeAPK(file)
-    print("hi")
-    return a.get_permissions()
+    #perrmissions
+    permissions=a.permissions()
+    #cmd
+    suspicious_cmds = [" su ", " mount ", " reboot ", " mkdir "]
+    cmdList=[]
+    for i in range(len(z)):
+        for j in range(len(suspicious_cmds)):
+            if suspicious_cmds[j] == z[i]:
+                cmdList.append(suspicious_cmds[j])
+    #api
+    suspicious_APIs = [" getSimSerialNumber ", " getSubscriberId ", " getDeviceId "]
+    APIsList=[]
+    for i in range(len(z)):
+        for j in range(len(suspicious_APIs)):
+            if suspicious_APIs[j] == z[i]:
+                APIsList.append(suspicious_APIs[j])
 
-
-def getByteCode(url):
-    a,d,dx = AnalyzeAPK(url)
-    for method in dx.get_methods():
-        if method.is_external():
-            continue
-        m = method.get_method()
-        if m.get_code():
-            print(m.get_code().get_bc().get_raw())
-print(getPermissions("Files/app1.apk"))
+    features=[]
+    features.append(intentList)
+    features.append(permissions)
+    features.append(cmdList)
+    features.append(APIsList)
+    return features
