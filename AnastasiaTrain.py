@@ -2,7 +2,6 @@ from androguard.core.bytecodes import dvm
 from androguard . core . bytecodes . dvm import *
 from androguard . core . bytecodes . apk import *
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
-#import xgboost as xgb
 from sklearn.feature_selection import SelectFromModel
 from sklearn . metrics import classification_report
 import numpy as np
@@ -13,7 +12,6 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from joblib import dump, load
 
 
-
 def get_features(file):
     try:
         features=""
@@ -21,14 +19,12 @@ def get_features(file):
         d = dvm . DalvikVMFormat ( a. get_dex () )
         z = d . get_strings ()
         #intents
-        intentList=[]
         for i in range ( len( z )):
             if z [i ]. startswith ( "android.intent.action."):
                 intents = z[i ]
                 features=features+ intents+" "
         #cmd
         suspicious_cmds = ["su", "mount", "reboot", "mkdir"]
-        cmdList=[]
         for i in range(len(z)):
             for j in range(len(suspicious_cmds)):
                 if suspicious_cmds[j] == z[i]:
@@ -41,27 +37,26 @@ def get_features(file):
         "getWifiState","setRequestMethod","getInputStream","getOutputStream","sendMessage","obtainMessage","myPid","killProcess",
         "readLines","available","delete","exists","mkdir","ListFiles","getBytes","valueOf","replaceAll","schedule","cancel","read",
         "close","getNextEntry","closeEntry","getInstance","doFinal","DESKeySpec","getDocumentElement","getElementByTagName","getAttribute"]
-        APIsList=[]
         for i in range(len(z)):
             for j in range(len(API_calls)):
                 if API_calls[j] == z[i]:
                     features = features + API_calls[j] + " "
-
-        #features=[]
-        #features.extend(intentList)
-        #features.extend(cmdList)
-        #features.extend(APIsList)
         return features
     except:
         return ""
-def feature_selection(X_train,y_train):
+
+def feature_train(X_train,y_train):
     clf = ExtraTreesClassifier(n_estimators=600)
     clf = clf.fit(X_train, y_train)
     importances = clf.feature_importances_
-    model = SelectFromModel(clf, prefit=True)
-    X_train_new = model.transform(X_train)
-    return X_train_new
+    dump(clf,'AnastasiaFeaturesSelected.joblib')
 
+
+def feature_selection(X):
+    clf=load('AnastasiaFeaturesSelected.joblib')
+    model = SelectFromModel(clf, prefit=True)
+    X_new = model.transform(X)
+    return X_new
 
 def writeFeaturesToCsv():
     X=[]
@@ -84,8 +79,11 @@ def writeFeaturesToCsv():
     #get x to bag of words model:
     vectorizer = CountVectorizer(analyzer="word",preprocessor=None,max_features=5000)
     X_bag = vectorizer.fit_transform(X)
+    #write to file:
+    dump(vectorizer,"AnastasiaFeatures.joblib")
     X_bag = X_bag.toarray()
-    X_bag_selected=feature_selection(X_bag,Y)
+    feature_train(X_bag,Y)
+    X_bag_selected=feature_selection(X_bag)
     #split to train and test
     X_train, X_test, y_train, y_test= train_test_split(X_bag_selected, Y, test_size=0.2, random_state=1)
     #write to csv
@@ -106,10 +104,10 @@ def train(train_file):#csv format
     clf = RandomForestClassifier(max_depth=8, n_estimators=600)#according to anastasia's article
     clf.fit(X_train, y_train)
     #write to file:
-    dump(clf, 'RandomForestClassifier.joblib')
+    dump(clf, 'AnastasiaClassifier.joblib')
 
-def test(test_file):
-    clf = load('RandomForestClassifier.joblib')
+def Model_Accuracy(test_file):
+    clf = load('AnastasiaClassifier.joblib')
     data_test = np.genfromtxt(open(test_file, "r"), delimiter=",")
     y_test = data_test[:, 1][1:]
     X_test = data_test[:, 2:][1:]
@@ -121,8 +119,8 @@ def test(test_file):
 
 
 def main():
-    #writeFeaturesToCsv()
+    writeFeaturesToCsv()
     train("Train.csv")
-    test("Test.csv")
+    Model_Accuracy("Test.csv")
 
 main()
