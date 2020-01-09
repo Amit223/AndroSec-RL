@@ -1,7 +1,7 @@
 from sklearn.neighbors import KNeighborsClassifier
 from Models.FeatureExtraction import get_permissions
 from Models.WriteFeatures import write_features_to_csv
-from Models.ClassifiersFunction import train, model_accuracy
+from Models.ClassifiersFunctions import train, model_accuracy
 
 
 

@@ -1,7 +1,7 @@
 from sklearn.svm import SVC
 from Models.FeatureExtraction import get_apicalls_and_permissions
 from Models.WriteFeatures import write_features_to_csv
-from Models.ClassifiersFunction import train, model_accuracy
+from Models.ClassifiersFunctions import train, model_accuracy
 
 def write_features_to_csv_SVM():
     write_features_to_csv('../Files/benign/', '../Files/malware/', get_apicalls_and_permissions, "SVMFeatures.joblib")
