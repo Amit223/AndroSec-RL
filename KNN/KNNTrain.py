@@ -7,12 +7,25 @@ from joblib import dump, load
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn . metrics import classification_report
-
+#from KNN.FeatureExtraction import get_permission
 
 # this method receive apk manifest as xml file and extract all permission from it
 # then save the permissions found in a XXX file
 def save_permissions_to_file():
     print("hello")
+
+
+def get_permission(apkFilePath):
+    permissions = ""
+    try:
+        a = APK(apkFilePath)
+        requested_permissions = a.get_permissions()
+        for i in requested_permissions:
+            permissions = permissions + " " + i
+    except:
+        return ""
+    return permissions
+
 
 
 # this method receive path to directory and read all apk files in it
@@ -72,20 +85,20 @@ def train(train_file):#csv format
 
 # this method receive apk file and extract only requested permissions in it's manifest
 # returns the permissions as string
-def get_permission(apkFilePath):
-    permissions = ""
-    print(apkFilePath)
-    try:
-        a = APK(apkFilePath)
-        # print("REQUESTED PERMISSIONS:")
-        requested_permissions = a.get_permissions()
-        for i in requested_permissions:
-            permissions = permissions + " " + i
-            #print("\t", i)
-        #print(permissions)
-    except:
-        print("exception in " + apkFilePath)
-    return permissions
+# def get_permission(apkFilePath):
+#     permissions = ""
+#     print(apkFilePath)
+#     try:
+#         a = APK(apkFilePath)
+#         # print("REQUESTED PERMISSIONS:")
+#         requested_permissions = a.get_permissions()
+#         for i in requested_permissions:
+#             permissions = permissions + " " + i
+#             #print("\t", i)
+#         #print(permissions)
+#     except:
+#         print("exception in " + apkFilePath)
+#     return permissions
 
 
 def writeFeaturesToCsv():
@@ -93,20 +106,23 @@ def writeFeaturesToCsv():
     Y=[]
     #bening:
     print("............................bening..............................")
-    for file in os.listdir('Files/benign'):
-        features = get_permission('Files/benign/'+file)
+    for file in os.listdir('../Files/benign'):
+        print(file)
+        features = get_permission('../Files/benign/'+file)
         if features != "":
             X.append(features)
             Y.append(0)  # not malware
         print("V")
     print("............................malware..............................")
-    for file in os.listdir('Files/malware'):
-        features = get_permission('Files/malware/'+file)
+    for file in os.listdir('../Files/malware'):
+        print(file)
+        features = get_permission('../Files/malware/'+file)
         if features != "":
             X.append(features)
             Y.append(1)  # malware
         print("V")
         # get x to bag of words model:
+    print(X)
     vectorizer = CountVectorizer(analyzer="word", preprocessor=None, max_features=5000)
     X_bag = vectorizer.fit_transform(X)
     # write to file:
