@@ -3,7 +3,7 @@ from androguard . core . bytecodes . dvm import *
 from androguard . core . bytecodes . apk import *
 from sklearn.feature_selection import SelectFromModel
 from joblib import load
-from KNNTrain import get_permission
+from KNN.KNNTrain import get_permission
 
 class KNNDetector():
 
