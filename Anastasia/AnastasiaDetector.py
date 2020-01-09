@@ -5,6 +5,13 @@ from sklearn.feature_selection import SelectFromModel
 from joblib import  load
 
 class AnastasiaDetector():
+    def __init__(self):
+        self.vectorizer=load("AnastasiaFeatures.joblib")
+        self.feature_selector = load('AnastasiaFeaturesSelected.joblib')
+        self.clf = load('AnastasiaClassifier.joblib')
+
+
+
     def get_features(self,file):
         try:
             features=""
@@ -44,15 +51,12 @@ class AnastasiaDetector():
         #feature extraction
         features=self.get_features(file)
         #vectorize:
-        vectorizer=load("AnastasiaFeatures.joblib")
-        X=vectorizer.transform([features]).toarray()
+        X=self.vectorizer.transform([features]).toarray()
         #feature selection:
-        feature_selector = load('AnastasiaFeaturesSelected.joblib')
-        model = SelectFromModel(feature_selector, prefit=True)
+        model = SelectFromModel(self.feature_selector, prefit=True)
         X_new = model.transform(X)
         #predict:
-        clf = load('AnastasiaClassifier.joblib')
-        return int(clf.predict(X_new)[0])
+        return int(self.clf.predict(X_new)[0])
 
 detector=AnastasiaDetector()
 print(detector.detect("app.apk"))
