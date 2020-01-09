@@ -1,8 +1,9 @@
 import os
 from Anastasia.AnastasiaDetector import AnastasiaDetector
 from SVM.SVMDetector import SVMDetector
+from KNN.KNNDetector import KNNDetector
 
-detectors=[AnastasiaDetector(),SVMDetector()]
+detectors=[AnastasiaDetector(),SVMDetector(),KNNDetector()]
 
 def mainSystem():
     file = input("Enter file path: ")
