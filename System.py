@@ -6,7 +6,8 @@ detectors=[AnastasiaDetector(),SVMDetector()]
 
 def mainSystem():
     file = input("Enter file path: ")
-    return detect(file)
+    detection=detect(file)
+    return detection
 
 
 
@@ -31,4 +32,7 @@ def detect(file):
         return 1
     else:
         return 0
+
+if __name__=='__main__':
+    print(mainSystem())
 

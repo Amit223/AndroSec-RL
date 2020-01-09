@@ -4,10 +4,10 @@ from androguard . core . bytecodes . apk import *
 from sklearn.feature_selection import SelectFromModel
 from joblib import  load
 
-class SVMDetector():
+class SVMDetector:
     def __init__(self):
-        self.vectorizer=load("SVMFeatures.joblib")
-        self.clf = load('SVMClassifier.joblib')
+        self.vectorizer=load("SVM/SVMFeatures.joblib")
+        self.clf = load('SVM/SVMClassifier.joblib')
 
     def get_features(self,file):
         try:
@@ -51,6 +51,3 @@ class SVMDetector():
         X=self.vectorizer.transform([features]).toarray()
         #predict:
         return int(self.clf.predict(X)[0])
-
-detector=SVMDetector()
-print(detector.detect("app.apk"))

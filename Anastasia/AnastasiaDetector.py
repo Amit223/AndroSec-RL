@@ -4,11 +4,11 @@ from androguard . core . bytecodes . apk import *
 from sklearn.feature_selection import SelectFromModel
 from joblib import  load
 
-class AnastasiaDetector():
+class AnastasiaDetector:
     def __init__(self):
-        self.vectorizer=load("AnastasiaFeatures.joblib")
-        self.feature_selector = load('AnastasiaFeaturesSelected.joblib')
-        self.clf = load('AnastasiaClassifier.joblib')
+        self.vectorizer=load("Anastasia/AnastasiaFeatures.joblib")
+        self.feature_selector = load('Anastasia/AnastasiaFeaturesSelected.joblib')
+        self.clf = load('Anastasia/AnastasiaClassifier.joblib')
 
 
 
@@ -57,6 +57,3 @@ class AnastasiaDetector():
         X_new = model.transform(X)
         #predict:
         return int(self.clf.predict(X_new)[0])
-
-detector=AnastasiaDetector()
-print(detector.detect("app.apk"))
