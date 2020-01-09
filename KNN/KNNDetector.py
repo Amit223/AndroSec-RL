@@ -6,6 +6,9 @@ from joblib import load
 from KNN.KNNTrain import get_permission
 
 class KNNDetector:
+    def __init__(self):
+        self.vectorizer=load("KNN/KNNFeatures.joblib")
+        self.clf = load('KNN/KNNClassifier.joblib')
 
 
     #this function return 1 if file is malware and 0 otherwise
@@ -13,11 +16,6 @@ class KNNDetector:
         #feature extraction
         features = get_permission(file)
         # vectorize:
-        vectorizer = load("KNNFeatures.joblib")
-        X = vectorizer.transform([features]).toarray()
+        X = self.vectorizer.transform([features]).toarray()
         # predict:
-        clf = load("KNNClassifier.joblib")
-        return int(clf.predict(X)[0])
-
-detector=KNNDetector()
-print(detector.detect("app.apk"))
+        return int(self.clf.predict(X)[0])
