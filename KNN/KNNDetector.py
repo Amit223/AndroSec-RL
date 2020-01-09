@@ -1,9 +1,5 @@
-from androguard.core.bytecodes import dvm
-from androguard . core . bytecodes . dvm import *
-from androguard . core . bytecodes . apk import *
-from sklearn.feature_selection import SelectFromModel
 from joblib import load
-from KNN.KNNTrain import get_permission
+from Models.FeatureExtraction import get_permissions
 
 class KNNDetector:
     def __init__(self):
@@ -14,7 +10,7 @@ class KNNDetector:
     #this function return 1 if file is malware and 0 otherwise
     def detect(self,file):
         #feature extraction
-        features = get_permission(file)
+        features = get_permissions(file)
         # vectorize:
         X = self.vectorizer.transform([features]).toarray()
         # predict:
