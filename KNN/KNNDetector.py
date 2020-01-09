@@ -5,7 +5,7 @@ from sklearn.feature_selection import SelectFromModel
 from joblib import load
 from KNN.KNNTrain import get_permission
 
-class KNNDetector():
+class KNNDetector:
 
 
     #this function return 1 if file is malware and 0 otherwise
