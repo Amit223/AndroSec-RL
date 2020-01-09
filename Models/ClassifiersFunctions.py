@@ -17,9 +17,9 @@ def model_accuracy(test_file, joblib_classifier_file):
     classifier = load(joblib_classifier_file)
     data_test = np.genfromtxt(open(test_file, "r"), delimiter=",")
     y_test = data_test[:, 1][1:]
-    X_test = data_test[:, 2:][1:]
+    x_test = data_test[:, 2:][1:]
     # predict
-    y_pred = classifier.predict(X_test)
+    y_pred = classifier.predict(x_test)
     print(classification_report(y_test, y_pred))
-    scores = cross_val_score(classifier, X_test, y_test, cv=3)  # todo: change when we get more files
+    scores = cross_val_score(classifier, x_test, y_test, cv=3)  # todo: change when we get more files
     print("Accuracy:" + str(scores.mean()))

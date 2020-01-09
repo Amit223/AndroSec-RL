@@ -1,127 +1,46 @@
-from androguard.core.bytecodes import dvm
-from androguard . core . bytecodes . dvm import *
-from androguard . core . bytecodes . apk import *
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from sklearn.feature_selection import SelectFromModel
-from sklearn . metrics import classification_report
-import numpy as np
-import pandas as pd
-import os
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.model_selection import train_test_split, cross_val_score
 from joblib import dump, load
+from Models.FeatureExtraction import get_intents_cmdcalls_apicalls
+from Models.ClassifiersFunctions import train, model_accuracy
+from Models.WriteFeatures import fill_list_of_features, create_bag_of_word, crate_train_test_csv_files
 
 
-def get_features(file):
-    try:
-        features=""
-        a = APK (file)
-        d = dvm . DalvikVMFormat ( a. get_dex () )
-        z = d . get_strings ()
-        #intents
-        for i in range ( len( z )):
-            if z [i ]. startswith ( "android.intent.action."):
-                intents = z[i ]
-                features=features+ intents+" "
-        #cmd
-        suspicious_cmds = ["su", "mount", "reboot", "mkdir"]
-        for i in range(len(z)):
-            for j in range(len(suspicious_cmds)):
-                if suspicious_cmds[j] == z[i]:
-                    features=features+suspicious_cmds[j]+" "
-        #api
-        API_calls = ["getDeviceId","getCellLocation","setFlags","addFlags","setDataAndType","putExtra","init","query",
-        "insert","update","writeBytes","write","append","indexOf","substring","startService","getFilesDir","openFileOutput","getApplicationInfo",
-        "getRunningServices","getMemoryInfo","restartPackage","getInstalledPackages","sendTextMessage","getSubscriberId","getLine1Number","getSimSerialNumber","getNetworkOperator",
-        "loadClass","loadLibrary","exec","getNetworkInfo","getExtraInfo","getTypeName","isConnected","getState","setWifiEnabled",
-        "getWifiState","setRequestMethod","getInputStream","getOutputStream","sendMessage","obtainMessage","myPid","killProcess",
-        "readLines","available","delete","exists","mkdir","ListFiles","getBytes","valueOf","replaceAll","schedule","cancel","read",
-        "close","getNextEntry","closeEntry","getInstance","doFinal","DESKeySpec","getDocumentElement","getElementByTagName","getAttribute"]
-        for i in range(len(z)):
-            for j in range(len(API_calls)):
-                if API_calls[j] == z[i]:
-                    features = features + API_calls[j] + " "
-        return features
-    except:
-        return ""
-
-def feature_train(X_train,y_train):
+def feature_train(x_train, y_train):
     clf = ExtraTreesClassifier(n_estimators=600)
-    clf = clf.fit(X_train, y_train)
-    importances = clf.feature_importances_
-    dump(clf,'AnastasiaFeaturesSelected.joblib')
+    clf = clf.fit(x_train, y_train)
+    clf.feature_importances_
+    dump(clf, 'AnastasiaFeaturesSelected.joblib')
 
 
-def feature_selection(X):
-    clf=load('AnastasiaFeaturesSelected.joblib')
+def feature_selection(x):
+    clf = load('AnastasiaFeaturesSelected.joblib')
     model = SelectFromModel(clf, prefit=True)
-    X_new = model.transform(X)
-    return X_new
-
-def writeFeaturesToCsv():
-    X=[]
-    Y=[]
-    #bening:
-    print("............................bening..............................")
-    for file in os.listdir('Files/benign'):
-        features=get_features('Files/benign/'+file)
-        if features !="":
-            X.append(features)
-            Y.append(0)#not malware
-        print("V")
-    print("............................malware..............................")
-    for file in os.listdir('Files/malware'):
-        features = get_features('Files/malware/'+file)
-        if features!="":
-            X.append(features)
-            Y.append(1)  #malware
-        print("V")
-    #get x to bag of words model:
-    vectorizer = CountVectorizer(analyzer="word",preprocessor=None,max_features=5000)
-    X_bag = vectorizer.fit_transform(X)
-    #write to file:
-    dump(vectorizer,"AnastasiaFeatures.joblib")
-    X_bag = X_bag.toarray()
-    feature_train(X_bag,Y)
-    X_bag_selected=feature_selection(X_bag)
-    #split to train and test
-    X_train, X_test, y_train, y_test= train_test_split(X_bag_selected, Y, test_size=0.2, random_state=1)
-    #write to csv
-    #write train:
-    df_train=pd.DataFrame(X_train)
-    df_train.insert(0,column='isMalware',value=y_train)
-    df_train.to_csv("Train.csv")
-    #write test:
-    df_train=pd.DataFrame(X_test)
-    df_train.insert(0,column='isMalware',value=y_test)
-    df_train.to_csv("Test.csv")
+    x_new = model.transform(x)
+    return x_new
 
 
-def train(train_file):#csv format
-    data_train = np.genfromtxt(open(train_file, "r"), delimiter=",")
-    y_train = data_train[:, 1][1:]
-    X_train = data_train[:, 2:][1:]
+def write_features_to_csv():
+    X, Y = fill_list_of_features("../Files/benign/", "../Files/malware/", get_intents_cmdcalls_apicalls)
+    X_bag = create_bag_of_word(X, "AnastasiaFeatures.joblib")
+    feature_train(X_bag, Y)  # relevant only for Anstasia
+    X_bag = feature_selection(X_bag)  # relevant only for Anstasia
+    crate_train_test_csv_files(X_bag, Y)
+
+
+def train_anastasia(train_file):#csv format
     clf = RandomForestClassifier(max_depth=8, n_estimators=600)#according to anastasia's article
-    clf.fit(X_train, y_train)
-    #write to file:
-    dump(clf, 'AnastasiaClassifier.joblib')
+    train(train_file, "AnastasiaClassifier.joblib", clf)
 
-def Model_Accuracy(test_file):
-    clf = load('AnastasiaClassifier.joblib')
-    data_test = np.genfromtxt(open(test_file, "r"), delimiter=",")
-    y_test = data_test[:, 1][1:]
-    X_test = data_test[:, 2:][1:]
-    #predict
-    y_pred = clf.predict(X_test)
-    print(classification_report(y_test, y_pred))
-    scores = cross_val_score(clf, X_test, y_test, cv=3)  # todo: change when we get more files
-    print("Accuracy:" + str(scores.mean()))
+
+def model_accuracy_Anastasia(test_file):
+    model_accuracy(test_file, "AnastasiaClassifier.joblib")
 
 
 def main():
-    writeFeaturesToCsv()
-    train("Train.csv")
-    Model_Accuracy("Test.csv")
+    write_features_to_csv()
+    train_anastasia("Train.csv")
+    model_accuracy_Anastasia("Test.csv")
 
 
 if __name__ == '__main__':
