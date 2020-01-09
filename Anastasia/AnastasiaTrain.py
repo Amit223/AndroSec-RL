@@ -123,4 +123,6 @@ def main():
     train("Train.csv")
     Model_Accuracy("Test.csv")
 
-main()
+
+if __name__ == '__main__':
+    main()
